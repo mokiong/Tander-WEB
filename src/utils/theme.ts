@@ -16,10 +16,14 @@ export const theme = extendTheme({
   },
   textStyles: {
     logo: {
-      fontSize: "45px",
+      fontSize: "50px",
       lineHeight: "110%",
       letterSpacing: "-3px",
       color: "rgb(231,86,56)",
+    },
+    matchMessage: {
+      letterSpacing: "-1px",
+      fontWeight: "bold",
     },
   },
 });

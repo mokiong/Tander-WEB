@@ -5,7 +5,10 @@ export const createApolloClient = () => {
   return new ApolloClient({
     ssrMode: typeof window === "undefined",
     link: createHttpLink({
-      uri: process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/graphql",
+      uri:
+        process.env.NEXT_PUBLIC_API_URL ||
+        // "http://localhost:4000/graphql" ||
+        "http://192.168.254.110:4000/graphql",
       credentials: "include",
     }),
     // headers: {

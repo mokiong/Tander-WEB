@@ -1,6 +1,5 @@
 import { Box } from "@chakra-ui/core";
 import React from "react";
-import { Layout } from "./Layout";
 
 interface BackImageProps {
   imagePath?: string;
@@ -19,6 +18,7 @@ export const BackImage: React.FC<BackImageProps> = ({
       backgroundImage={imagePath}
       backgroundRepeat="no-repeat"
       bgSize="cover"
+      bgColor="black"
     >
       {children}
     </Box>

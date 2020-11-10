@@ -1,17 +1,21 @@
 import React from "react";
 import { Box, Link, Flex, Button, Image } from "@chakra-ui/core";
 import { Link as ReactLink } from "react-router-dom";
-import { useLogoutMutation, useMeQuery } from "../generated/graphql";
+import { MeQuery, useLogoutMutation, useMeQuery } from "../generated/graphql";
+import { useApolloClient } from "@apollo/client";
+import { useHistory } from "react-router-dom";
 
 interface NavBarProps {
   isLoginPage?: Boolean;
 }
 
 export const NavBar: React.FC<NavBarProps> = ({ isLoginPage }) => {
+  const [logout, { loading: fetchingLogout }] = useLogoutMutation();
+  const apolloClient = useApolloClient();
+  const history = useHistory();
   const { data, loading } = useMeQuery({
     skip: typeof window === "undefined",
   });
-  const [logout, { loading: fetchingLogout }] = useLogoutMutation();
 
   let body = null;
 
@@ -20,22 +24,23 @@ export const NavBar: React.FC<NavBarProps> = ({ isLoginPage }) => {
   } else if (!data?.me?.username) {
     body = (
       <>
-        <ReactLink to={isLoginPage ? "/register" : "/login"}>
-          <Button
-            mr={3}
-            color="tinder.secondary"
-            _hover={{
-              bg: "linear-gradient(to bottom right, #FE3C72, #FF655B)",
-              color: "white",
-            }}
-            _active={{
-              bg: "white",
-              border: "none",
-            }}
-          >
-            {isLoginPage ? "REGISTER" : "LOG IN"}
-          </Button>
-        </ReactLink>
+        <Button
+          mr={3}
+          color="tinder.secondary"
+          _hover={{
+            bg: "linear-gradient(to bottom right, #FE3C72, #FF655B)",
+            color: "white",
+          }}
+          _active={{
+            bg: "white",
+            border: "none",
+          }}
+          onClick={() => {
+            isLoginPage ? history.push("/register") : history.push("/login");
+          }}
+        >
+          {isLoginPage ? "REGISTER" : "LOG IN"}
+        </Button>
       </>
     );
   } else {
@@ -47,6 +52,7 @@ export const NavBar: React.FC<NavBarProps> = ({ isLoginPage }) => {
         <Button
           onClick={async () => {
             await logout();
+            await apolloClient.resetStore();
           }}
           isLoading={fetchingLogout}
           mr={3}
@@ -70,7 +76,13 @@ export const NavBar: React.FC<NavBarProps> = ({ isLoginPage }) => {
       <Flex flex={1} m="auto" align="center" maxW="100%">
         <ReactLink to="/">
           <Flex direction="row" align="center">
-            <Image src="/images/logo.png" alt="logo" maxH="50px" ml={4} />
+            <Image
+              src="/images/logo.png"
+              maxH="50px"
+              ml={4}
+              ignoreFallback
+              alt="logo"
+            />
             <Box ml={"auto"} textStyle="logo" fontWeight="550">
               tander
             </Box>

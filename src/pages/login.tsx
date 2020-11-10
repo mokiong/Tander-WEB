@@ -1,14 +1,14 @@
-import { Center, Flex, Heading, Box, Button } from "@chakra-ui/core";
-import { Formik, Form } from "formik";
+import { Box, Button, Flex, Heading } from "@chakra-ui/core";
+import { Form, Formik } from "formik";
 import React from "react";
-import { InputField } from "../components/inputField";
-import { Wrapper } from "../components/Wrapper";
-import { useLoginMutation, useMeQuery } from "../generated/graphql";
-import { toErrorMap } from "../utils/toErrorMap";
 import { useHistory } from "react-router-dom";
 import { BackImage } from "../components/BackImage";
+import { InputField } from "../components/inputField";
 import { NavBar } from "../components/NavBar";
-import { generator } from "random-number";
+import { Wrapper } from "../components/Wrapper";
+import { MeDocument, useLoginMutation, useMeQuery } from "../generated/graphql";
+import { toErrorMap } from "../utils/toErrorMap";
+import { useImageRandomizer } from "../utils/useImageRandomizer";
 
 interface loginProps {}
 
@@ -19,19 +19,15 @@ const Login: React.FC<loginProps> = () => {
     skip: typeof window === "undefined",
   });
 
-  const gen = generator({
-    min: 1,
-    max: 3,
-    integer: true,
-  });
-
   // if already logged in
   if (data?.me?.username) {
-    history.push("/");
+    history.push("/home");
   }
 
   return (
-    <BackImage imagePath={`url('/images/background${gen()}.jpg')`}>
+    <BackImage
+      imagePath={`url('/images/background${useImageRandomizer()}.jpg')`}
+    >
       <NavBar isLoginPage />
 
       <Wrapper variant="small">
@@ -44,7 +40,7 @@ const Login: React.FC<loginProps> = () => {
           borderRadius="md"
         >
           <Heading as="h2" w="100%" color="tinder.secondary">
-            GO AHEAD
+            Go Ahead
           </Heading>
           <Box mt={4} paddingLeft="50px" paddingRight="50px">
             <Formik
@@ -52,12 +48,21 @@ const Login: React.FC<loginProps> = () => {
               onSubmit={async (values, { setErrors }) => {
                 const response = await login({
                   variables: { ...values },
+                  update: (cache, { data }) => {
+                    cache.writeQuery({
+                      query: MeDocument,
+                      data: {
+                        __typename: "Query",
+                        me: data?.login.user,
+                      },
+                    });
+                  },
                 });
 
                 if (response.data?.login.errors) {
                   setErrors(toErrorMap(response.data.login.errors));
                 } else if (response.data?.login.user) {
-                  history.push("/");
+                  history.push("/home");
                 }
               }}
             >
