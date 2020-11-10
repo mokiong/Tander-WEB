@@ -1,0 +1,12 @@
+query Conversation($receiverId: Int!) {
+  conversation(receiverId: $receiverId) {
+    id
+    text
+    receiver {
+      username
+      id
+    }
+    createdAt
+    updatedAt
+  }
+}

@@ -1,6 +1,7 @@
 import { Flex, Box, Image, Button, Stack } from "@chakra-ui/core";
 import React from "react";
-import { useGetMessagesQuery } from "../generated/graphql";
+import { useConversationQuery } from "../generated/graphql";
+import { useHistory } from "react-router-dom";
 
 interface InboxProps {}
 
@@ -9,7 +10,56 @@ export const Inbox: React.FC<InboxProps> = () => {
     "matches" | "messages"
   >("matches");
 
-  const { data, loading } = useGetMessagesQuery();
+  const history = useHistory();
+  const { data, loading } = useConversationQuery();
+
+  let body;
+
+  if (!data) {
+    body = <Box></Box>;
+  } else if (!data && loading) {
+    <div>loading...</div>;
+  } else {
+    body = (
+      <Box overflowY="scroll" h="100%">
+        <Stack spacing={0}>
+          {data!.conversation.map((message) =>
+            !message ? null : (
+              <Flex
+                as={Button}
+                align="center"
+                direction="row"
+                onClick={() => {
+                  history.push(`/home/message/${message.receiver.id}`);
+                }}
+              >
+                <Image
+                  mt={3}
+                  ml={3}
+                  mb={3}
+                  mr={5}
+                  src="/images/homepage.jpg"
+                  borderRadius="full"
+                  boxSize="65px"
+                  objectFit="cover"
+                  alt="profile picture"
+                  ignoreFallback
+                />
+                <Flex mr="auto" direction="column">
+                  <Box mb={3} font="san-serif" fontWeight="bold">
+                    {message.receiver.username}
+                  </Box>
+                  <Box color="grey" font="san-serif" fontSize="12px">
+                    {message.text}
+                  </Box>
+                </Flex>
+              </Flex>
+            )
+          )}
+        </Stack>
+      </Box>
+    );
+  }
 
   return (
     <Flex direction="column" w="40%" h="100vh">
@@ -78,41 +128,7 @@ export const Inbox: React.FC<InboxProps> = () => {
           Messages
         </Button>
       </Flex>
-      {!data && loading ? (
-        <div>loading...</div>
-      ) : (
-        <Box overflowY="scroll" h="100%">
-          <Stack spacing={0}>
-            {/* {data!.getAllMessage.map((message) =>
-              !message ? null : (
-                <Flex align="center" direction="row">
-                  <Image
-                    mt={3}
-                    ml={3}
-                    mb={3}
-                    mr={5}
-                    src="/images/homepage.jpg"
-                    borderRadius="full"
-                    boxSize="65px"
-                    objectFit="cover"
-                    alt="profile picture"
-                    ignoreFallback
-                  />
-                  <Flex mr="auto" direction="column">
-                    <Box mb={3} font="san-serif" fontWeight="bold">
-                      {message.matchUsername}
-                    </Box>
-                    <Box color="grey" font="san-serif" fontSize="12px">
-                      {message.text}
-                    </Box>
-                  </Flex>
-                </Flex>
-              )
-            )} */}
-            <Box>Hi</Box>
-          </Stack>
-        </Box>
-      )}
+      {body}
     </Flex>
   );
 };

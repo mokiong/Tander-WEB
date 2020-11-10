@@ -55,7 +55,6 @@ export type Match = {
   userResponse2: Scalars['Float'];
   createdAt: Scalars['String'];
   updatedAt: Scalars['String'];
-  inbox: Array<Message>;
   user1: User;
   user2: User;
 };
@@ -66,7 +65,9 @@ export type Message = {
   text: Scalars['String'];
   userId: Scalars['Float'];
   receiverId: Scalars['Float'];
-  matchUsername: Scalars['String'];
+  createdAt: Scalars['String'];
+  updatedAt: Scalars['String'];
+  receiver: User;
 };
 
 export type Mutation = {
@@ -173,14 +174,20 @@ export type RegisterMutation = (
   ) }
 );
 
-export type GetMessagesQueryVariables = Exact<{ [key: string]: never; }>;
+export type ConversationQueryVariables = Exact<{
+  receiverId: Scalars['Int'];
+}>;
 
 
-export type GetMessagesQuery = (
+export type ConversationQuery = (
   { __typename?: 'Query' }
-  & { getAllMessage: Array<(
+  & { conversation: Array<(
     { __typename?: 'Message' }
-    & Pick<Message, 'id' | 'userId' | 'text' | 'matchUsername'>
+    & Pick<Message, 'id' | 'text' | 'createdAt' | 'updatedAt'>
+    & { receiver: (
+      { __typename?: 'User' }
+      & Pick<User, 'username' | 'id'>
+    ) }
   )> }
 );
 
@@ -307,41 +314,46 @@ export function useRegisterMutation(baseOptions?: Apollo.MutationHookOptions<Reg
 export type RegisterMutationHookResult = ReturnType<typeof useRegisterMutation>;
 export type RegisterMutationResult = Apollo.MutationResult<RegisterMutation>;
 export type RegisterMutationOptions = Apollo.BaseMutationOptions<RegisterMutation, RegisterMutationVariables>;
-export const GetMessagesDocument = gql`
-    query getMessages {
-  getAllMessage {
+export const ConversationDocument = gql`
+    query Conversation($receiverId: Int!) {
+  conversation(receiverId: $receiverId) {
     id
-    userId
     text
-    matchUsername
+    receiver {
+      username
+      id
+    }
+    createdAt
+    updatedAt
   }
 }
     `;
 
 /**
- * __useGetMessagesQuery__
+ * __useConversationQuery__
  *
- * To run a query within a React component, call `useGetMessagesQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetMessagesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useConversationQuery` and pass it any options that fit your needs.
+ * When your component renders, `useConversationQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useGetMessagesQuery({
+ * const { data, loading, error } = useConversationQuery({
  *   variables: {
+ *      receiverId: // value for 'receiverId'
  *   },
  * });
  */
-export function useGetMessagesQuery(baseOptions?: Apollo.QueryHookOptions<GetMessagesQuery, GetMessagesQueryVariables>) {
-        return Apollo.useQuery<GetMessagesQuery, GetMessagesQueryVariables>(GetMessagesDocument, baseOptions);
+export function useConversationQuery(baseOptions?: Apollo.QueryHookOptions<ConversationQuery, ConversationQueryVariables>) {
+        return Apollo.useQuery<ConversationQuery, ConversationQueryVariables>(ConversationDocument, baseOptions);
       }
-export function useGetMessagesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetMessagesQuery, GetMessagesQueryVariables>) {
-          return Apollo.useLazyQuery<GetMessagesQuery, GetMessagesQueryVariables>(GetMessagesDocument, baseOptions);
+export function useConversationLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ConversationQuery, ConversationQueryVariables>) {
+          return Apollo.useLazyQuery<ConversationQuery, ConversationQueryVariables>(ConversationDocument, baseOptions);
         }
-export type GetMessagesQueryHookResult = ReturnType<typeof useGetMessagesQuery>;
-export type GetMessagesLazyQueryHookResult = ReturnType<typeof useGetMessagesLazyQuery>;
-export type GetMessagesQueryResult = Apollo.QueryResult<GetMessagesQuery, GetMessagesQueryVariables>;
+export type ConversationQueryHookResult = ReturnType<typeof useConversationQuery>;
+export type ConversationLazyQueryHookResult = ReturnType<typeof useConversationLazyQuery>;
+export type ConversationQueryResult = Apollo.QueryResult<ConversationQuery, ConversationQueryVariables>;
 export const MeDocument = gql`
     query Me {
   me {

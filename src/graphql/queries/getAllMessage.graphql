@@ -1,8 +1,0 @@
-query getMessages {
-  getAllMessage {
-    id
-    userId
-    text
-    matchUsername
-  }
-}
