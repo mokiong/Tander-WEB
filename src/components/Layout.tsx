@@ -7,13 +7,7 @@ interface layoutProps {
 
 export const Layout: React.FC<layoutProps> = ({ children, inputBgColor }) => {
   return (
-    <Box
-      w="100%"
-      minH="100vh"
-      border="solid black"
-      bg="tinder.bg"
-      bgColor={inputBgColor}
-    >
+    <Box w="100%" minH="100vh" bg="tinder.bg" bgColor={inputBgColor}>
       {children}
     </Box>
   );

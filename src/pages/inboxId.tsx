@@ -1,11 +1,11 @@
-import { Box, Flex, Image } from "@chakra-ui/core";
+import { Flex, Box, Image } from "@chakra-ui/core";
 import React from "react";
 import { Inbox } from "../components/Inbox";
 import { Layout } from "../components/Layout";
 
-interface homeProps {}
+interface inboxIdProps {}
 
-const Home: React.FC<homeProps> = ({}) => {
+const InboxId: React.FC<inboxIdProps> = () => {
   return (
     <Layout inputBgColor="white">
       <Flex direction="row">
@@ -25,4 +25,4 @@ const Home: React.FC<homeProps> = ({}) => {
   );
 };
 
-export default Home;
+export default InboxId;
