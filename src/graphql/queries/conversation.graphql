@@ -2,6 +2,10 @@ query Conversation($receiverId: Int!) {
   conversation(receiverId: $receiverId) {
     id
     text
+    user {
+      username
+      id
+    }
     receiver {
       username
       id

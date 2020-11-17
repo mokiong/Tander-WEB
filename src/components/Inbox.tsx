@@ -1,36 +1,44 @@
-import { Flex, Box, Image, Button, Stack } from "@chakra-ui/core";
+import { Flex, Box, Image, Button, Stack, Link } from "@chakra-ui/core";
 import React from "react";
-import { useConversationQuery } from "../generated/graphql";
+import { useUserQuery, useMeQuery } from "../generated/graphql";
 import { useHistory } from "react-router-dom";
+import { capitalizer } from "../utils/useCapitalizer";
 
 interface InboxProps {}
 
 export const Inbox: React.FC<InboxProps> = () => {
+  const history = useHistory();
+
   const [matchOrMessage, changeMatchOrMessage] = React.useState<
     "matches" | "messages"
   >("matches");
 
-  const history = useHistory();
-  const { data, loading } = useConversationQuery();
+  const { data, loading } = useUserQuery({
+    notifyOnNetworkStatusChange: true
+  });
 
   let body;
-
-  if (!data) {
+  if (!data && loading) {
+    body = <div>loading...</div>;
+  } else if (!data) {
     body = <Box></Box>;
-  } else if (!data && loading) {
-    <div>loading...</div>;
   } else {
     body = (
       <Box overflowY="scroll" h="100%">
         <Stack spacing={0}>
-          {data!.conversation.map((message) =>
-            !message ? null : (
+          {data!.user.inbox?.map(match =>
+            !match ? null : (
               <Flex
-                as={Button}
+                as={Link}
+                _hover={{
+                  bg: "tinder.secondaryBg",
+                  textDecoration: "none"
+                }}
+                key={match.id}
                 align="center"
                 direction="row"
                 onClick={() => {
-                  history.push(`/home/message/${message.receiver.id}`);
+                  history.push(`/home/message/${match.id}`);
                 }}
               >
                 <Image
@@ -47,10 +55,10 @@ export const Inbox: React.FC<InboxProps> = () => {
                 />
                 <Flex mr="auto" direction="column">
                   <Box mb={3} font="san-serif" fontWeight="bold">
-                    {message.receiver.username}
+                    {capitalizer(match.username)}
                   </Box>
                   <Box color="grey" font="san-serif" fontSize="12px">
-                    {message.text}
+                    {match.latestMessage}
                   </Box>
                 </Flex>
               </Flex>
@@ -62,7 +70,7 @@ export const Inbox: React.FC<InboxProps> = () => {
   }
 
   return (
-    <Flex direction="column" w="40%" h="100vh">
+    <Flex direction="column" w="40%" minH="100vh">
       <Flex bg="linear-gradient(to right, #FE3C72, #FF655B)" align="center">
         <Image
           mt={3}
@@ -84,11 +92,11 @@ export const Inbox: React.FC<InboxProps> = () => {
           _hover={{
             bg: "white",
             borderBottom: "solid",
-            borderColor: "#FE3C72",
+            borderColor: "#FE3C72"
           }}
           _focus={{
             outline: "solid",
-            outlineColor: "#FE3C72",
+            outlineColor: "#FE3C72"
           }}
           borderBottom={matchOrMessage === "matches" ? "solid" : ""}
           borderBottomColor={
@@ -108,11 +116,11 @@ export const Inbox: React.FC<InboxProps> = () => {
           _hover={{
             bg: "white",
             borderBottom: "solid",
-            borderColor: "#FF655B",
+            borderColor: "tinder.primary"
           }}
           _focus={{
             outline: "solid",
-            outlineColor: "#FF655B",
+            outlineColor: "tinder.secondary"
           }}
           borderBottom={matchOrMessage === "messages" ? "solid" : ""}
           borderBottomColor={

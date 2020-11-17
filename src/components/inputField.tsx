@@ -5,13 +5,17 @@ import {
   FormLabel,
   Input,
   FormErrorMessage,
-  Textarea,
+  Textarea
 } from "@chakra-ui/core";
 
 type inputFieldProps = InputHTMLAttributes<HTMLInputElement> & {
   name: string;
   label: string;
   textarea?: boolean;
+  _focus?: any;
+  pr?: string;
+  large?: boolean;
+  size?: string;
 };
 
 type inputTextArea = typeof Input | typeof Textarea;
@@ -21,8 +25,8 @@ type inputTextArea = typeof Input | typeof Textarea;
 
 export const InputField: React.FC<inputFieldProps> = ({
   label,
-  size: _,
   textarea,
+  large,
   ...props
 }) => {
   const [field, { error }] = useField(props);

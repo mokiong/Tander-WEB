@@ -1,0 +1,3 @@
+mutation Message($message: String!, $userId: Int!) {
+  message(userId: $userId, message: $message)
+}

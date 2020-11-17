@@ -1,18 +1,17 @@
 import { ApolloClient, createHttpLink, InMemoryCache } from "@apollo/client";
 
 export const createApolloClient = () => {
-  console.log(process.env.NEXT_PUBLIC_API_URL);
   return new ApolloClient({
     ssrMode: typeof window === "undefined",
     link: createHttpLink({
-      uri: process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/graphql",
+      uri: "http://localhost:4000/graphql",
       // home test
       // "http://192.168.254.110:4000/graphql",
-      credentials: "include",
+      credentials: "include"
     }),
     // headers: {
     //   cookie: (typeof window === 'undefined' ? ctx.req.headers.cookie : undefined) || ""
     // },
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache()
   });
 };

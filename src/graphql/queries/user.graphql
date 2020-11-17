@@ -1,0 +1,11 @@
+query User {
+  user {
+    id
+    username
+    inbox {
+      id
+      username
+      latestMessage
+    }
+  }
+}
