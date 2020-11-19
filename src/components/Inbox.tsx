@@ -14,7 +14,7 @@ export const Inbox: React.FC<InboxProps> = () => {
   >("matches");
 
   const { data, loading } = useUserQuery({
-    notifyOnNetworkStatusChange: true
+    notifyOnNetworkStatusChange: true,
   });
 
   let body;
@@ -24,15 +24,15 @@ export const Inbox: React.FC<InboxProps> = () => {
     body = <Box></Box>;
   } else {
     body = (
-      <Box overflowY="scroll" h="100%">
+      <Box overflowY="scroll" h="100%" overflowX="hidden">
         <Stack spacing={0}>
-          {data!.user.inbox?.map(match =>
+          {data!.user.inbox?.map((match) =>
             !match ? null : (
               <Flex
                 as={Link}
                 _hover={{
                   bg: "tinder.secondaryBg",
-                  textDecoration: "none"
+                  textDecoration: "none",
                 }}
                 key={match.id}
                 align="center"
@@ -70,8 +70,12 @@ export const Inbox: React.FC<InboxProps> = () => {
   }
 
   return (
-    <Flex direction="column" w="40%" minH="100vh">
-      <Flex bg="linear-gradient(to right, #FE3C72, #FF655B)" align="center">
+    <Flex direction="column" w="40%" h="100%" maxH="100vh">
+      <Flex
+        bg="linear-gradient(to right, #FE3C72, #FF655B)"
+        align="center"
+        w="100%"
+      >
         <Image
           mt={3}
           ml={3}
@@ -92,11 +96,11 @@ export const Inbox: React.FC<InboxProps> = () => {
           _hover={{
             bg: "white",
             borderBottom: "solid",
-            borderColor: "#FE3C72"
+            borderColor: "#FE3C72",
           }}
           _focus={{
             outline: "solid",
-            outlineColor: "#FE3C72"
+            outlineColor: "#FE3C72",
           }}
           borderBottom={matchOrMessage === "matches" ? "solid" : ""}
           borderBottomColor={
@@ -116,11 +120,11 @@ export const Inbox: React.FC<InboxProps> = () => {
           _hover={{
             bg: "white",
             borderBottom: "solid",
-            borderColor: "tinder.primary"
+            borderColor: "tinder.primary",
           }}
           _focus={{
             outline: "solid",
-            outlineColor: "tinder.secondary"
+            outlineColor: "tinder.secondary",
           }}
           borderBottom={matchOrMessage === "messages" ? "solid" : ""}
           borderBottomColor={
