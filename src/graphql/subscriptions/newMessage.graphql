@@ -1,0 +1,14 @@
+subscription NewMessage {
+  newMessage {
+    id
+    receiver {
+      id
+      username
+    }
+    user {
+      id
+      username
+    }
+    text
+  }
+}

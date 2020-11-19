@@ -22,11 +22,14 @@ import {
   useMeQuery,
   useConversationQuery,
   useMessageMutation,
+  useNewMessageSubscription,
 } from "../generated/graphql";
 
 interface inboxIdProps {}
 
 const InboxId: React.FC<inboxIdProps> = () => {
+  const [newMessage, setNewMessage] = React.useState();
+
   const { id: paramId } = useParams<{ id: string }>();
 
   const { data: meData } = useMeQuery({
@@ -38,7 +41,18 @@ const InboxId: React.FC<inboxIdProps> = () => {
     },
   });
   const [message, { error }] = useMessageMutation();
+  const {
+    data: newMessageData,
+    error: newMessageError,
+    loading: newMessageLoading,
+  } = useNewMessageSubscription();
 
+  // const newMessageArray = [];
+  // const addNewMessage = (newMessage) => {
+  //   console.log("adding new");
+  //   newMessageArray.push(newMessage);
+  // };
+  // console.log("length: ", newMessageArray.length);
   let body;
 
   if (!data) {
@@ -58,35 +72,76 @@ const InboxId: React.FC<inboxIdProps> = () => {
         >
           <Flex direction="column" maxH="100vh" h="100%">
             <Box h="75%" overflowY="scroll" overflowX="hidden">
-              {!data && loading ? (
-                <div>loading</div>
-              ) : (
-                <Stack spacing={0}>
-                  {data.conversation.map((message) =>
-                    !message ? null : (
-                      <Flex direction="row" key={message.id}>
-                        {message.user.id === meData?.me.id ? (
+              <Stack spacing={0}>
+                {!data && loading ? (
+                  <div>loading</div>
+                ) : (
+                  <Box>
+                    {data.conversation.map((message) =>
+                      !message ? null : (
+                        <Flex direction="row" key={message.id}>
+                          {message.user.id === meData?.me.id ? (
+                            <Box ml="auto">
+                              <Box>{message.user.username}</Box>
+                              <Box>{message.text}</Box>
+                            </Box>
+                          ) : (
+                            <Box mr="auto">
+                              <Box>{message.user.username}</Box>
+                              <Box>{message.text}</Box>
+                            </Box>
+                          )}
+                        </Flex>
+                      )
+                    )}
+                  </Box>
+                )}
+                {newMessageLoading ? null : (
+                  <Box>
+                    {!newMessageData.newMessage ? null : (
+                      <Flex direction="row" key={newMessageData.newMessage.id}>
+                        {newMessageData.newMessage.user.id === meData?.me.id ? (
                           <Box ml="auto">
-                            <Box>{message.user.username}</Box>
-                            <Box>{message.text}</Box>
+                            <Box>{newMessageData.newMessage.user.username}</Box>
+                            <Box>{newMessageData.newMessage.text}</Box>
                           </Box>
                         ) : (
                           <Box mr="auto">
-                            <Box>{message.user.username}</Box>
-                            <Box>{message.text}</Box>
+                            <Box>{newMessageData.newMessage.user.username}</Box>
+                            <Box>{newMessageData.newMessage.text}</Box>
                           </Box>
                         )}
                       </Flex>
-                    )
-                  )}
-                </Stack>
-              )}
+                    )}
+                  </Box>
+                )}
+                {/* {newMessageArray.length === 0 ? null : (
+                  <Box>
+                    {newMessageArray.map((element) =>
+                      !element ? null : (
+                        <Flex direction="row" key={element.id}>
+                          {element.id === meData?.me.id ? (
+                            <Box ml="auto">
+                              <Box>{element.user.username}</Box>
+                              <Box>{element.text}</Box>
+                            </Box>
+                          ) : (
+                            <Box mr="auto">
+                              <Box>{element.user.username}</Box>
+                              <Box>{element.text}</Box>
+                            </Box>
+                          )}
+                        </Flex>
+                      )
+                    )}
+                  </Box>
+                )} */}
+              </Stack>
             </Box>
             <Box h="25%" align="center" p={5}>
               <Formik
                 initialValues={{ message: "" }}
                 onSubmit={async (values) => {
-                  console.log(values);
                   await message({
                     variables: {
                       message: values.message,
@@ -108,6 +163,9 @@ const InboxId: React.FC<inboxIdProps> = () => {
                       />
                       <InputRightElement width="7rem">
                         <Button
+                          // onClick={() => {
+                          //   addNewMessage(newMessageData?.newMessage);
+                          // }}
                           isLoading={isSubmitting}
                           mt={5}
                           mr={3}
