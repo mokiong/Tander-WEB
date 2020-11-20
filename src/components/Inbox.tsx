@@ -1,6 +1,9 @@
 import { Flex, Box, Image, Button, Stack, Link } from "@chakra-ui/core";
 import React from "react";
-import { useUserQuery, useMeQuery } from "../generated/graphql";
+import {
+  useUserQuery,
+  useLatestMessageSubscription,
+} from "../generated/graphql";
 import { useHistory } from "react-router-dom";
 import { capitalizer } from "../utils/useCapitalizer";
 
@@ -16,6 +19,21 @@ export const Inbox: React.FC<InboxProps> = () => {
   const { data, loading } = useUserQuery({
     notifyOnNetworkStatusChange: true,
   });
+
+  const {
+    data: lastMessageData,
+    loading: lastMessageLoading,
+  } = useLatestMessageSubscription();
+
+
+  // mount subscription data to state
+  // update subsciption array
+  // React.useEffect(() => {
+  //   if (!newMessageLoading && newMessageData) {
+  //     setNewMessage(newMessageData);
+  //     setNewMessagesArray([...newMessagesArray, newMessageData]);
+  //   }
+  // }, [newMessageLoading, newMessageData]);
 
   let body;
   if (!data && loading) {
@@ -34,7 +52,7 @@ export const Inbox: React.FC<InboxProps> = () => {
                   bg: "tinder.secondaryBg",
                   textDecoration: "none",
                 }}
-                key={match.id}
+                key={`${match.id}-match`}
                 align="center"
                 direction="row"
                 onClick={() => {

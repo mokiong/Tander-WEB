@@ -1,0 +1,7 @@
+subscription LatestMessage {
+  latestMessage {
+    username
+    id
+    latestMessage
+  }
+}

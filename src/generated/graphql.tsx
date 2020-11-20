@@ -130,7 +130,22 @@ export type MatchOutput = {
 
 export type Subscription = {
   __typename?: 'Subscription';
-  newMessage: Message;
+  latestMessage: InboxOutput;
+  newMessage: MessageSubscription;
+};
+
+export type MessageSubscription = {
+  __typename?: 'MessageSubscription';
+  id: Scalars['Float'];
+  user: UserOutput;
+  text?: Maybe<Scalars['String']>;
+  receiverId: Scalars['Float'];
+};
+
+export type UserOutput = {
+  __typename?: 'UserOutput';
+  id: Scalars['Float'];
+  username: Scalars['String'];
 };
 
 export type LoginMutationVariables = Exact<{
@@ -239,20 +254,28 @@ export type UserQuery = (
   ) }
 );
 
+export type LatestMessageSubscriptionVariables = Exact<{ [key: string]: never; }>;
+
+
+export type LatestMessageSubscription = (
+  { __typename?: 'Subscription' }
+  & { latestMessage: (
+    { __typename?: 'InboxOutput' }
+    & Pick<InboxOutput, 'username' | 'id' | 'latestMessage'>
+  ) }
+);
+
 export type NewMessageSubscriptionVariables = Exact<{ [key: string]: never; }>;
 
 
 export type NewMessageSubscription = (
   { __typename?: 'Subscription' }
   & { newMessage: (
-    { __typename?: 'Message' }
-    & Pick<Message, 'id' | 'text'>
-    & { receiver: (
-      { __typename?: 'User' }
-      & Pick<User, 'id' | 'username'>
-    ), user: (
-      { __typename?: 'User' }
-      & Pick<User, 'id' | 'username'>
+    { __typename?: 'MessageSubscription' }
+    & Pick<MessageSubscription, 'id' | 'text' | 'receiverId'>
+    & { user: (
+      { __typename?: 'UserOutput' }
+      & Pick<UserOutput, 'id' | 'username'>
     ) }
   ) }
 );
@@ -515,19 +538,46 @@ export function useUserLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UserQ
 export type UserQueryHookResult = ReturnType<typeof useUserQuery>;
 export type UserLazyQueryHookResult = ReturnType<typeof useUserLazyQuery>;
 export type UserQueryResult = Apollo.QueryResult<UserQuery, UserQueryVariables>;
+export const LatestMessageDocument = gql`
+    subscription LatestMessage {
+  latestMessage {
+    username
+    id
+    latestMessage
+  }
+}
+    `;
+
+/**
+ * __useLatestMessageSubscription__
+ *
+ * To run a query within a React component, call `useLatestMessageSubscription` and pass it any options that fit your needs.
+ * When your component renders, `useLatestMessageSubscription` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the subscription, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useLatestMessageSubscription({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useLatestMessageSubscription(baseOptions?: Apollo.SubscriptionHookOptions<LatestMessageSubscription, LatestMessageSubscriptionVariables>) {
+        return Apollo.useSubscription<LatestMessageSubscription, LatestMessageSubscriptionVariables>(LatestMessageDocument, baseOptions);
+      }
+export type LatestMessageSubscriptionHookResult = ReturnType<typeof useLatestMessageSubscription>;
+export type LatestMessageSubscriptionResult = Apollo.SubscriptionResult<LatestMessageSubscription>;
 export const NewMessageDocument = gql`
     subscription NewMessage {
   newMessage {
     id
-    receiver {
-      id
-      username
-    }
     user {
       id
       username
     }
     text
+    receiverId
   }
 }
     `;

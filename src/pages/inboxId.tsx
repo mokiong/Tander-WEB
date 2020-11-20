@@ -12,6 +12,7 @@ import {
   FormLabel,
 } from "@chakra-ui/core";
 import { Field, Form, Formik } from "formik";
+import { NoUndefinedVariablesRule } from "graphql";
 import React from "react";
 import { useParams } from "react-router-dom";
 import { Inbox } from "../components/Inbox";
@@ -23,18 +24,21 @@ import {
   useConversationQuery,
   useMessageMutation,
   useNewMessageSubscription,
+  NewMessageSubscription,
 } from "../generated/graphql";
+import { isMySubscriptions } from "../utils/isRightConvo";
+import { capitalizer } from "../utils/useCapitalizer";
 
 interface inboxIdProps {}
 
 const InboxId: React.FC<inboxIdProps> = () => {
-  const [newMessage, setNewMessage] = React.useState();
-
   const { id: paramId } = useParams<{ id: string }>();
 
+  const [params, setParams] = React.useState(paramId);
   const { data: meData } = useMeQuery({
     skip: typeof window === "undefined",
   });
+  console.log(params);
   const { data, loading } = useConversationQuery({
     variables: {
       receiverId: parseInt(paramId),
@@ -47,13 +51,39 @@ const InboxId: React.FC<inboxIdProps> = () => {
     loading: newMessageLoading,
   } = useNewMessageSubscription();
 
-  // const newMessageArray = [];
-  // const addNewMessage = (newMessage) => {
-  //   console.log("adding new");
-  //   newMessageArray.push(newMessage);
-  // };
-  // console.log("length: ", newMessageArray.length);
-  let body;
+  const [newMessage, setNewMessage] = React.useState<NewMessageSubscription>(
+    undefined
+  );
+  const [newMessagesArray, setNewMessagesArray] = React.useState<
+    NewMessageSubscription[]
+  >([]);
+
+  // check wether subscriptions is yours
+  // and the person youre having a chat with
+  const isMySubscriptions = () => {
+    if (
+      newMessageData?.newMessage.user.id === meData?.me.id &&
+      newMessageData?.newMessage.receiverId === parseInt(paramId)
+    ) {
+      return true;
+    } else if (
+      newMessageData?.newMessage.user.id === parseInt(paramId) &&
+      newMessageData?.newMessage.receiverId === meData?.me.id
+    ) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  // mount subscription data to state
+  // update subsciption array
+  React.useEffect(() => {
+    if (!newMessageLoading && newMessageData) {
+      setNewMessage(newMessageData);
+      setNewMessagesArray([...newMessagesArray, newMessageData]);
+    }
+  }, [newMessageLoading, newMessageData]);
 
   if (!data) {
   }
@@ -77,7 +107,7 @@ const InboxId: React.FC<inboxIdProps> = () => {
                   <div>loading</div>
                 ) : (
                   <Box>
-                    {data.conversation.map((message) =>
+                    {data?.conversation.map((message) =>
                       !message ? null : (
                         <Flex direction="row" key={message.id}>
                           {message.user.id === meData?.me.id ? (
@@ -96,61 +126,66 @@ const InboxId: React.FC<inboxIdProps> = () => {
                     )}
                   </Box>
                 )}
-                {newMessageLoading ? null : (
+                {!newMessageData && newMessageLoading ? null : (
                   <Box>
-                    {!newMessageData.newMessage ? null : (
-                      <Flex direction="row" key={newMessageData.newMessage.id}>
-                        {newMessageData.newMessage.user.id === meData?.me.id ? (
-                          <Box ml="auto">
-                            <Box>{newMessageData.newMessage.user.username}</Box>
-                            <Box>{newMessageData.newMessage.text}</Box>
-                          </Box>
-                        ) : (
-                          <Box mr="auto">
-                            <Box>{newMessageData.newMessage.user.username}</Box>
-                            <Box>{newMessageData.newMessage.text}</Box>
-                          </Box>
+                    {/* {!isMySubscriptions(
+                      meData?.me.id,
+                      newMessageData?.newMessage.user.id,
+                      parseInt(paramId),
+                      newMessageData?.newMessage.receiverId
+                    ) */}
+                    {!isMySubscriptions()
+                      ? null
+                      : newMessagesArray.map((element) =>
+                          !element ? null : (
+                            <Flex
+                              direction="row"
+                              key={`${element.newMessage.id}-subscrip`}
+                            >
+                              {element.newMessage.user.id === meData?.me.id ? (
+                                <Box ml="auto">
+                                  <Box>
+                                    {capitalizer(
+                                      element.newMessage.user.username
+                                    )}
+                                  </Box>
+                                  <Box>{element.newMessage.text}</Box>
+                                </Box>
+                              ) : (
+                                <Box mr="auto">
+                                  <Box>
+                                    {capitalizer(
+                                      element.newMessage.user.username
+                                    )}
+                                  </Box>
+                                  <Box>{element.newMessage.text}</Box>
+                                </Box>
+                              )}
+                            </Flex>
+                          )
                         )}
-                      </Flex>
-                    )}
                   </Box>
                 )}
-                {/* {newMessageArray.length === 0 ? null : (
-                  <Box>
-                    {newMessageArray.map((element) =>
-                      !element ? null : (
-                        <Flex direction="row" key={element.id}>
-                          {element.id === meData?.me.id ? (
-                            <Box ml="auto">
-                              <Box>{element.user.username}</Box>
-                              <Box>{element.text}</Box>
-                            </Box>
-                          ) : (
-                            <Box mr="auto">
-                              <Box>{element.user.username}</Box>
-                              <Box>{element.text}</Box>
-                            </Box>
-                          )}
-                        </Flex>
-                      )
-                    )}
-                  </Box>
-                )} */}
               </Stack>
             </Box>
             <Box h="25%" align="center" p={5}>
               <Formik
                 initialValues={{ message: "" }}
-                onSubmit={async (values) => {
+                onSubmit={async (values, { resetForm }) => {
                   await message({
                     variables: {
                       message: values.message,
                       userId: parseInt(paramId),
                     },
                   });
+                  resetForm({
+                    values: {
+                      message: "",
+                    },
+                  });
                 }}
               >
-                {({ isSubmitting }) => (
+                {() => (
                   <Form>
                     <InputGroup size="lg">
                       <InputTextArea
@@ -163,10 +198,6 @@ const InboxId: React.FC<inboxIdProps> = () => {
                       />
                       <InputRightElement width="7rem">
                         <Button
-                          // onClick={() => {
-                          //   addNewMessage(newMessageData?.newMessage);
-                          // }}
-                          isLoading={isSubmitting}
                           mt={5}
                           mr={3}
                           h="2rem"
@@ -175,6 +206,9 @@ const InboxId: React.FC<inboxIdProps> = () => {
                           type="submit"
                           background="tinder.secondary"
                           color="white"
+                          _hover={{
+                            bg: "tinder.secondary",
+                          }}
                         >
                           Send
                         </Button>
