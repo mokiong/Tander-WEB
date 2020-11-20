@@ -1,3 +1,4 @@
+import { useQuery } from "@apollo/client";
 import {
   Flex,
   Box,
@@ -34,11 +35,11 @@ interface inboxIdProps {}
 const InboxId: React.FC<inboxIdProps> = () => {
   const { id: paramId } = useParams<{ id: string }>();
 
-  const [params, setParams] = React.useState(paramId);
+  const [paramState, setParamState] = React.useState(paramId);
+
   const { data: meData } = useMeQuery({
     skip: typeof window === "undefined",
   });
-  console.log(params);
   const { data, loading } = useConversationQuery({
     variables: {
       receiverId: parseInt(paramId),
@@ -84,6 +85,14 @@ const InboxId: React.FC<inboxIdProps> = () => {
       setNewMessagesArray([...newMessagesArray, newMessageData]);
     }
   }, [newMessageLoading, newMessageData]);
+
+  React.useEffect(() => {
+    if (paramState !== paramId) {
+      setParamState(paramId);
+      setNewMessagesArray([]);
+      setNewMessage(undefined);
+    }
+  }, [paramState]);
 
   if (!data) {
   }
