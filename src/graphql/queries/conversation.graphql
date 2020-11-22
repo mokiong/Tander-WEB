@@ -1,16 +1,15 @@
-query Conversation($receiverId: Int!) {
-  conversation(receiverId: $receiverId) {
+query Conversation($limit: Int!, $receiverId: Int!, $cursor: String) {
+  conversation(limit: $limit, receiverId: $receiverId, cursor: $cursor) {
     id
     text
     user {
-      username
       id
+      username
     }
     receiver {
-      username
       id
+      username
     }
     createdAt
-    updatedAt
   }
 }

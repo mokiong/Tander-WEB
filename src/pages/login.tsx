@@ -6,7 +6,12 @@ import { BackImage } from "../components/BackImage";
 import { InputField } from "../components/inputField";
 import { NavBar } from "../components/NavBar";
 import { Wrapper } from "../components/Wrapper";
-import { MeDocument, useLoginMutation, useMeQuery } from "../generated/graphql";
+import {
+  MeDocument,
+  useLoginMutation,
+  useMeQuery,
+  useConversationQuery,
+} from "../generated/graphql";
 import { toErrorMap } from "../utils/toErrorMap";
 import { useImageRandomizer } from "../utils/useImageRandomizer";
 
@@ -19,10 +24,28 @@ const Login: React.FC<loginProps> = () => {
     skip: typeof window === "undefined",
   });
 
-  // if already logged in
-  if (data?.me?.username) {
-    history.push("/home");
+  const {
+    data: newData,
+    loading: newLoad,
+    fetchMore,
+    variables,
+  } = useConversationQuery({
+    variables: {
+      receiverId: 10,
+      limit: 2,
+      cursor: null,
+    },
+    notifyOnNetworkStatusChange: true,
+  });
+
+  if (newData && !newLoad) {
+    console.log(newData.conversation);
   }
+
+  // if already logged in
+  // if (data?.me?.username) {
+  //   history.push("/home");
+  // }
 
   return (
     <BackImage

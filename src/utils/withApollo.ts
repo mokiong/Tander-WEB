@@ -6,7 +6,11 @@ import {
   split,
 } from "@apollo/client";
 import { WebSocketLink } from "@apollo/client/link/ws";
-import { getMainDefinition } from "@apollo/client/utilities";
+import {
+  getMainDefinition,
+  offsetLimitPagination,
+} from "@apollo/client/utilities";
+import { Message } from "../generated/graphql";
 
 const httpLink = new HttpLink({
   uri: "http://localhost:4000/graphql",
@@ -39,6 +43,21 @@ export const createApolloClient = () => {
     // headers: {
     //   cookie: (typeof window === 'undefined' ? ctx.req.headers.cookie : undefined) || ""
     // },
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            conversation: {
+              keyArgs: [],
+              merge(existing = [], incoming: any[], { args }) {
+                console.log(existing);
+                console.log("args: ", args);
+                return [...(existing || []), ...incoming];
+              },
+            },
+          },
+        },
+      },
+    }),
   });
 };

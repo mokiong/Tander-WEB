@@ -26,6 +26,7 @@ import {
   useMessageMutation,
   useNewMessageSubscription,
   NewMessageSubscription,
+  ConversationDocument,
 } from "../generated/graphql";
 import { isMySubscriptions } from "../utils/isRightConvo";
 import { capitalizer } from "../utils/useCapitalizer";
@@ -35,64 +36,48 @@ interface inboxIdProps {}
 const InboxId: React.FC<inboxIdProps> = () => {
   const { id: paramId } = useParams<{ id: string }>();
 
-  const [paramState, setParamState] = React.useState(paramId);
-
   const { data: meData } = useMeQuery({
     skip: typeof window === "undefined",
   });
-  const { data, loading } = useConversationQuery({
+  const { data, loading, fetchMore, variables } = useConversationQuery({
     variables: {
       receiverId: parseInt(paramId),
+      limit: 2,
+      cursor: null,
     },
+    notifyOnNetworkStatusChange: true,
   });
-  const [message, { error }] = useMessageMutation();
+  const [message] = useMessageMutation({
+    awaitRefetchQueries: true,
+    refetchQueries: [
+      {
+        query: ConversationDocument,
+        variables: {
+          receiverId: parseInt(paramId),
+          limit: 1,
+          cursor: null,
+        },
+      },
+    ],
+  });
   const {
     data: newMessageData,
-    error: newMessageError,
     loading: newMessageLoading,
   } = useNewMessageSubscription();
 
-  const [newMessage, setNewMessage] = React.useState<NewMessageSubscription>(
-    undefined
-  );
-  const [newMessagesArray, setNewMessagesArray] = React.useState<
-    NewMessageSubscription[]
-  >([]);
-
-  // check wether subscriptions is yours
-  // and the person youre having a chat with
-  const isMySubscriptions = () => {
-    if (
-      newMessageData?.newMessage.user.id === meData?.me.id &&
-      newMessageData?.newMessage.receiverId === parseInt(paramId)
-    ) {
-      return true;
-    } else if (
-      newMessageData?.newMessage.user.id === parseInt(paramId) &&
-      newMessageData?.newMessage.receiverId === meData?.me.id
-    ) {
-      return true;
-    } else {
-      return false;
-    }
-  };
-
-  // mount subscription data to state
-  // update subsciption array
-  React.useEffect(() => {
-    if (!newMessageLoading && newMessageData) {
-      setNewMessage(newMessageData);
-      setNewMessagesArray([...newMessagesArray, newMessageData]);
-    }
-  }, [newMessageLoading, newMessageData]);
-
-  React.useEffect(() => {
-    if (paramState !== paramId) {
-      setParamState(paramId);
-      setNewMessagesArray([]);
-      setNewMessage(undefined);
-    }
-  }, [paramState]);
+  // React.useEffect(() => {
+  //   console.log("use effect rendering");
+  //   if (newMessageData) {
+  //     console.log("renderinggggg");
+  //     fetchMore({
+  //       variables: {
+  //         receiverId: variables?.receiverId,
+  //         limit: 1,
+  //         cursor: null,
+  //       },
+  //     });
+  //   }
+  // }, [newMessageData]);
 
   if (!data) {
   }
@@ -111,68 +96,76 @@ const InboxId: React.FC<inboxIdProps> = () => {
         >
           <Flex direction="column" maxH="100vh" h="100%">
             <Box h="75%" overflowY="scroll" overflowX="hidden">
+              <Box>
+                <Button
+                  onClick={() => {
+                    fetchMore({
+                      variables: {
+                        receiverId: variables?.receiverId,
+                        limit: variables?.limit,
+                        cursor:
+                          data?.conversation[data?.conversation.length - 1]
+                            .createdAt,
+                      },
+                    });
+                  }}
+                >
+                  load more
+                </Button>
+              </Box>
               <Stack spacing={0}>
                 {!data && loading ? (
                   <div>loading</div>
                 ) : (
                   <Box>
-                    {data?.conversation.map((message) =>
-                      !message ? null : (
-                        <Flex direction="row" key={message.id}>
-                          {message.user.id === meData?.me.id ? (
-                            <Box ml="auto">
-                              <Box>{message.user.username}</Box>
-                              <Box>{message.text}</Box>
-                            </Box>
-                          ) : (
-                            <Box mr="auto">
-                              <Box>{message.user.username}</Box>
-                              <Box>{message.text}</Box>
-                            </Box>
-                          )}
-                        </Flex>
-                      )
-                    )}
+                    {data?.conversation
+                      .slice(0)
+                      .reverse()
+                      .map((message) =>
+                        !message ? null : (
+                          <Flex direction="row" key={message.id}>
+                            {message.user.id === meData?.me.id ? (
+                              <Box ml="auto">
+                                <Box>{message.user.username}</Box>
+                                <Box>{message.text}</Box>
+                              </Box>
+                            ) : (
+                              <Box mr="auto">
+                                <Box>{message.user.username}</Box>
+                                <Box>{message.text}</Box>
+                              </Box>
+                            )}
+                          </Flex>
+                        )
+                      )}
                   </Box>
                 )}
                 {!newMessageData && newMessageLoading ? null : (
                   <Box>
-                    {/* {!isMySubscriptions(
-                      meData?.me.id,
-                      newMessageData?.newMessage.user.id,
-                      parseInt(paramId),
-                      newMessageData?.newMessage.receiverId
-                    ) */}
-                    {!isMySubscriptions()
-                      ? null
-                      : newMessagesArray.map((element) =>
-                          !element ? null : (
-                            <Flex
-                              direction="row"
-                              key={`${element.newMessage.id}-subscrip`}
-                            >
-                              {element.newMessage.user.id === meData?.me.id ? (
-                                <Box ml="auto">
-                                  <Box>
-                                    {capitalizer(
-                                      element.newMessage.user.username
-                                    )}
-                                  </Box>
-                                  <Box>{element.newMessage.text}</Box>
-                                </Box>
-                              ) : (
-                                <Box mr="auto">
-                                  <Box>
-                                    {capitalizer(
-                                      element.newMessage.user.username
-                                    )}
-                                  </Box>
-                                  <Box>{element.newMessage.text}</Box>
-                                </Box>
-                              )}
-                            </Flex>
-                          )
-                        )}
+                    <Flex
+                      direction="row"
+                      key={`${newMessageData.newMessage.id}-subscrip`}
+                    >
+                      {newMessageData.newMessage.user.id === meData?.me.id ? (
+                        <Box ml="auto">
+                          <Box>
+                            {capitalizer(
+                              newMessageData.newMessage.user.username
+                            )}
+                          </Box>
+                          <Box>{newMessageData.newMessage.text}</Box>
+                        </Box>
+                      ) : (
+                        <Box mr="auto">
+                          <Box>
+                            {capitalizer(
+                              newMessageData.newMessage.user.username
+                            )}
+                          </Box>
+                          <Box>{newMessageData.newMessage.text}</Box>
+                        </Box>
+                      )}
+                    </Flex>
                   </Box>
                 )}
               </Stack>
@@ -187,6 +180,14 @@ const InboxId: React.FC<inboxIdProps> = () => {
                       userId: parseInt(paramId),
                     },
                   });
+
+                  // await fetchMore({
+                  //   variables: {
+                  //     receiverId: variables?.receiverId,
+                  //     limit: 1,
+                  //     cursor: data?.conversation[0].createdAt,
+                  //   },
+                  // });
                   resetForm({
                     values: {
                       message: "",

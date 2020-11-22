@@ -23,6 +23,8 @@ export type Query = {
 
 
 export type QueryConversationArgs = {
+  limit: Scalars['Int'];
+  cursor?: Maybe<Scalars['String']>;
   receiverId: Scalars['Int'];
 };
 
@@ -140,6 +142,7 @@ export type MessageSubscription = {
   user: UserOutput;
   text?: Maybe<Scalars['String']>;
   receiverId: Scalars['Float'];
+  createdAt: Scalars['String'];
 };
 
 export type UserOutput = {
@@ -209,7 +212,9 @@ export type RegisterMutation = (
 );
 
 export type ConversationQueryVariables = Exact<{
+  limit: Scalars['Int'];
   receiverId: Scalars['Int'];
+  cursor?: Maybe<Scalars['String']>;
 }>;
 
 
@@ -217,13 +222,13 @@ export type ConversationQuery = (
   { __typename?: 'Query' }
   & { conversation: Array<(
     { __typename?: 'Message' }
-    & Pick<Message, 'id' | 'text' | 'createdAt' | 'updatedAt'>
+    & Pick<Message, 'id' | 'text' | 'createdAt'>
     & { user: (
       { __typename?: 'User' }
-      & Pick<User, 'username' | 'id'>
+      & Pick<User, 'id' | 'username'>
     ), receiver: (
       { __typename?: 'User' }
-      & Pick<User, 'username' | 'id'>
+      & Pick<User, 'id' | 'username'>
     ) }
   )> }
 );
@@ -272,7 +277,7 @@ export type NewMessageSubscription = (
   { __typename?: 'Subscription' }
   & { newMessage: (
     { __typename?: 'MessageSubscription' }
-    & Pick<MessageSubscription, 'id' | 'text' | 'receiverId'>
+    & Pick<MessageSubscription, 'id' | 'text' | 'receiverId' | 'createdAt'>
     & { user: (
       { __typename?: 'UserOutput' }
       & Pick<UserOutput, 'id' | 'username'>
@@ -424,20 +429,19 @@ export type RegisterMutationHookResult = ReturnType<typeof useRegisterMutation>;
 export type RegisterMutationResult = Apollo.MutationResult<RegisterMutation>;
 export type RegisterMutationOptions = Apollo.BaseMutationOptions<RegisterMutation, RegisterMutationVariables>;
 export const ConversationDocument = gql`
-    query Conversation($receiverId: Int!) {
-  conversation(receiverId: $receiverId) {
+    query Conversation($limit: Int!, $receiverId: Int!, $cursor: String) {
+  conversation(limit: $limit, receiverId: $receiverId, cursor: $cursor) {
     id
     text
     user {
-      username
       id
+      username
     }
     receiver {
-      username
       id
+      username
     }
     createdAt
-    updatedAt
   }
 }
     `;
@@ -454,7 +458,9 @@ export const ConversationDocument = gql`
  * @example
  * const { data, loading, error } = useConversationQuery({
  *   variables: {
+ *      limit: // value for 'limit'
  *      receiverId: // value for 'receiverId'
+ *      cursor: // value for 'cursor'
  *   },
  * });
  */
@@ -578,6 +584,7 @@ export const NewMessageDocument = gql`
     }
     text
     receiverId
+    createdAt
   }
 }
     `;
