@@ -27,6 +27,7 @@ import {
   useNewMessageSubscription,
   NewMessageSubscription,
   ConversationDocument,
+  NewMessageDocument,
 } from "../generated/graphql";
 import { isMySubscriptions } from "../utils/isRightConvo";
 import { capitalizer } from "../utils/useCapitalizer";
@@ -39,7 +40,14 @@ const InboxId: React.FC<inboxIdProps> = () => {
   const { data: meData } = useMeQuery({
     skip: typeof window === "undefined",
   });
-  const { data, loading, fetchMore, variables } = useConversationQuery({
+
+  const {
+    data,
+    loading,
+    fetchMore,
+    variables,
+    subscribeToMore,
+  } = useConversationQuery({
     variables: {
       receiverId: parseInt(paramId),
       limit: 2,
@@ -47,26 +55,26 @@ const InboxId: React.FC<inboxIdProps> = () => {
     },
     notifyOnNetworkStatusChange: true,
   });
-  const [message] = useMessageMutation({
-    awaitRefetchQueries: true,
-    refetchQueries: [
-      {
-        query: ConversationDocument,
-        variables: {
-          receiverId: parseInt(paramId),
-          limit: 1,
-          cursor: null,
-        },
-      },
-    ],
-  });
+
+  const [message] = useMessageMutation();
+  // awaitRefetchQueries: true,
+  // refetchQueries: [
+  //   {
+  //     query: ConversationDocument,
+  //     variables: {
+  //       receiverId: parseInt(paramId),
+  //       limit: 1,
+  //       cursor: null,
+  //     },
+  //   },
+  // ],
   const {
     data: newMessageData,
     loading: newMessageLoading,
   } = useNewMessageSubscription();
 
   // React.useEffect(() => {
-  //   console.log("use effect rendering");
+  //   console.log("at use Effect");
   //   if (newMessageData) {
   //     console.log("renderinggggg");
   //     fetchMore({
@@ -77,7 +85,33 @@ const InboxId: React.FC<inboxIdProps> = () => {
   //       },
   //     });
   //   }
+  //   return () => {
+  //     console.log("hello po");
+  //   };
   // }, [newMessageData]);
+
+  React.useEffect(() => {
+    subscribeToMore({
+      document: NewMessageDocument,
+      updateQuery: (prevData, { subscriptionData }) => {
+        console.log("prevData : ", prevData);
+        console.log("sub data: ", subscriptionData);
+        if (!subscriptionData?.data) {
+          return prevData;
+        }
+        // if (subscriptionData?.data?.conversation) {
+        //   prevData.conversation.push(subscriptionData.data.conversation);
+        //   return prevData.conversation;
+        // }
+        const newFeedItem = subscriptionData.data.newMessage;
+        const a = Object.assign({}, prevData, {
+          conversation: [newFeedItem, ...prevData.conversation],
+        });
+        console.log("new Obj", a);
+        return a;
+      },
+    });
+  }, [subscribeToMore]);
 
   if (!data) {
   }
@@ -126,7 +160,9 @@ const InboxId: React.FC<inboxIdProps> = () => {
                           <Flex direction="row" key={message.id}>
                             {message.user.id === meData?.me.id ? (
                               <Box ml="auto">
-                                <Box>{message.user.username}</Box>
+                                <Box>
+                                  <strong>{message.user.username}</strong>
+                                </Box>
                                 <Box>{message.text}</Box>
                               </Box>
                             ) : (
@@ -140,7 +176,7 @@ const InboxId: React.FC<inboxIdProps> = () => {
                       )}
                   </Box>
                 )}
-                {!newMessageData && newMessageLoading ? null : (
+                {/* {!newMessageData && newMessageLoading ? null : (
                   <Box>
                     <Flex
                       direction="row"
@@ -167,7 +203,7 @@ const InboxId: React.FC<inboxIdProps> = () => {
                       )}
                     </Flex>
                   </Box>
-                )}
+                )} */}
               </Stack>
             </Box>
             <Box h="25%" align="center" p={5}>

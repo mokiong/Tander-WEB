@@ -48,10 +48,8 @@ export const createApolloClient = () => {
         Query: {
           fields: {
             conversation: {
-              keyArgs: [],
+              keyArgs: ["receiverId"],
               merge(existing = [], incoming: any[], { args }) {
-                console.log(existing);
-                console.log("args: ", args);
                 return [...(existing || []), ...incoming];
               },
             },

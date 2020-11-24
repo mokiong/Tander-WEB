@@ -1,12 +1,15 @@
 subscription NewMessage {
   newMessage {
     id
+    text
     user {
       id
       username
     }
-    text
-    receiverId
+    receiver {
+      id
+      username
+    }
     createdAt
   }
 }

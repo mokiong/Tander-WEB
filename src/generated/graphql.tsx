@@ -133,22 +133,7 @@ export type MatchOutput = {
 export type Subscription = {
   __typename?: 'Subscription';
   latestMessage: InboxOutput;
-  newMessage: MessageSubscription;
-};
-
-export type MessageSubscription = {
-  __typename?: 'MessageSubscription';
-  id: Scalars['Float'];
-  user: UserOutput;
-  text?: Maybe<Scalars['String']>;
-  receiverId: Scalars['Float'];
-  createdAt: Scalars['String'];
-};
-
-export type UserOutput = {
-  __typename?: 'UserOutput';
-  id: Scalars['Float'];
-  username: Scalars['String'];
+  newMessage: Message;
 };
 
 export type LoginMutationVariables = Exact<{
@@ -276,11 +261,14 @@ export type NewMessageSubscriptionVariables = Exact<{ [key: string]: never; }>;
 export type NewMessageSubscription = (
   { __typename?: 'Subscription' }
   & { newMessage: (
-    { __typename?: 'MessageSubscription' }
-    & Pick<MessageSubscription, 'id' | 'text' | 'receiverId' | 'createdAt'>
+    { __typename?: 'Message' }
+    & Pick<Message, 'id' | 'text' | 'createdAt'>
     & { user: (
-      { __typename?: 'UserOutput' }
-      & Pick<UserOutput, 'id' | 'username'>
+      { __typename?: 'User' }
+      & Pick<User, 'id' | 'username'>
+    ), receiver: (
+      { __typename?: 'User' }
+      & Pick<User, 'id' | 'username'>
     ) }
   ) }
 );
@@ -578,12 +566,15 @@ export const NewMessageDocument = gql`
     subscription NewMessage {
   newMessage {
     id
+    text
     user {
       id
       username
     }
-    text
-    receiverId
+    receiver {
+      id
+      username
+    }
     createdAt
   }
 }
