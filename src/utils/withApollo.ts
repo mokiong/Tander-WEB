@@ -13,12 +13,14 @@ import {
 import { Message } from "../generated/graphql";
 
 const httpLink = new HttpLink({
-  uri: "http://localhost:4000/graphql",
+  // uri: "http://localhost:4000/graphql",
+  uri: "http://192.168.254.110:4000/graphql",
   credentials: "include",
 });
 
 const wsLink = new WebSocketLink({
-  uri: `ws://localhost:4000/graphql`,
+  // uri: `ws://localhost:4000/graphql`,
+  uri: `ws://192.168.254.110:4000/graphql`,
   options: {
     reconnect: true,
   },
@@ -39,6 +41,7 @@ const link = split(
 export const createApolloClient = () => {
   return new ApolloClient({
     ssrMode: typeof window === "undefined",
+    connectToDevTools: true,
     link,
     // headers: {
     //   cookie: (typeof window === 'undefined' ? ctx.req.headers.cookie : undefined) || ""
@@ -49,7 +52,7 @@ export const createApolloClient = () => {
           fields: {
             conversation: {
               keyArgs: ["receiverId"],
-              merge(existing = [], incoming: any[], { args }) {
+              merge(existing = [], incoming: any[]) {
                 return [...(existing || []), ...incoming];
               },
             },

@@ -29,14 +29,13 @@ import {
   ConversationDocument,
   NewMessageDocument,
 } from "../generated/graphql";
-import { isMySubscriptions } from "../utils/isRightConvo";
 import { capitalizer } from "../utils/useCapitalizer";
 
 interface inboxIdProps {}
 
 const InboxId: React.FC<inboxIdProps> = () => {
   const { id: paramId } = useParams<{ id: string }>();
-
+  console.log("hi");
   const { data: meData } = useMeQuery({
     skip: typeof window === "undefined",
   });
@@ -72,11 +71,12 @@ const InboxId: React.FC<inboxIdProps> = () => {
     data: newMessageData,
     loading: newMessageLoading,
   } = useNewMessageSubscription();
+  React.useEffect(() => {
+    console.log("hi po");
+  }, [newMessageData]);
 
   // React.useEffect(() => {
-  //   console.log("at use Effect");
-  //   if (newMessageData) {
-  //     console.log("renderinggggg");
+  //   if (newMessageData && fetchMore) {
   //     fetchMore({
   //       variables: {
   //         receiverId: variables?.receiverId,
@@ -85,33 +85,68 @@ const InboxId: React.FC<inboxIdProps> = () => {
   //       },
   //     });
   //   }
-  //   return () => {
-  //     console.log("hello po");
-  //   };
+
+  //   // if (subscribeUnsubscribe) {
+  //   //   return () => subscribeUnsubscribe();
+  //   // }
   // }, [newMessageData]);
+  // React.useEffect(() => {
+  //   let subscribeOrUnsubscribe;
+
+  //   subscribeOrUnsubscribe = subscribeToMore({
+  //     document: NewMessageDocument,
+  //     updateQuery: (prevData, { subscriptionData }) => {
+  //       console.log("prevData : ", prevData);
+  //       console.log("sub data: ", subscriptionData);
+  //       // if (!subscriptionData?.data) {
+  //       //   return prevData;
+  //       // }
+  //       // if (subscriptionData?.data?.conversation) {
+  //       //   prevData.conversation.push(subscriptionData.data.conversation);
+  //       //   return prevData.conversation;
+  //       // }
+  //       const newFeedItem = subscriptionData.data as unknown;
+  //       const convertedToSub = {
+  //         __typename: "Message",
+  //         ...(newFeedItem as NewMessageSubscription),
+  //       };
+  //       return Object.assign({}, prevData, {
+  //         conversation: [convertedToSub.newMessage],
+  //       });
+  //     },
+  //   });
+  // }, [subscribeToMore]);
+
+  const unsubscribe = React.useRef(null);
 
   React.useEffect(() => {
-    subscribeToMore({
-      document: NewMessageDocument,
-      updateQuery: (prevData, { subscriptionData }) => {
-        console.log("prevData : ", prevData);
-        console.log("sub data: ", subscriptionData);
-        if (!subscriptionData?.data) {
-          return prevData;
-        }
-        // if (subscriptionData?.data?.conversation) {
-        //   prevData.conversation.push(subscriptionData.data.conversation);
-        //   return prevData.conversation;
-        // }
-        const newFeedItem = subscriptionData.data.newMessage;
-        const a = Object.assign({}, prevData, {
-          conversation: [newFeedItem, ...prevData.conversation],
-        });
-        console.log("new Obj", a);
-        return a;
-      },
-    });
-  }, [subscribeToMore]);
+    if (subscribeToMore) {
+      console.log(unsubscribe.current);
+      if (unsubscribe.current) {
+        console.log("will unsubscribe");
+        unsubscribe.current();
+      }
+
+      unsubscribe.current = subscribeToMore({
+        document: NewMessageDocument,
+        variables: {},
+        updateQuery: (prevData, { subscriptionData }) => {
+          if (!subscriptionData?.data) {
+            return prevData;
+          }
+
+          const newFeedItem = subscriptionData.data as unknown;
+          const convertedToSub = {
+            __typename: "Message",
+            ...(newFeedItem as NewMessageSubscription),
+          };
+          return Object.assign({}, prevData, {
+            conversation: [convertedToSub.newMessage],
+          });
+        },
+      });
+    }
+  }, [paramId, subscribeToMore]);
 
   if (!data) {
   }
@@ -133,15 +168,17 @@ const InboxId: React.FC<inboxIdProps> = () => {
               <Box>
                 <Button
                   onClick={() => {
-                    fetchMore({
-                      variables: {
-                        receiverId: variables?.receiverId,
-                        limit: variables?.limit,
-                        cursor:
-                          data?.conversation[data?.conversation.length - 1]
-                            .createdAt,
-                      },
-                    });
+                    if (fetchMore) {
+                      fetchMore({
+                        variables: {
+                          receiverId: variables?.receiverId,
+                          limit: variables?.limit,
+                          cursor:
+                            data?.conversation[data?.conversation.length - 1]
+                              .createdAt,
+                        },
+                      });
+                    }
                   }}
                 >
                   load more
@@ -161,7 +198,9 @@ const InboxId: React.FC<inboxIdProps> = () => {
                             {message.user.id === meData?.me.id ? (
                               <Box ml="auto">
                                 <Box>
-                                  <strong>{message.user.username}</strong>
+                                  <strong>
+                                    {capitalizer(message.user.username)}
+                                  </strong>
                                 </Box>
                                 <Box>{message.text}</Box>
                               </Box>
