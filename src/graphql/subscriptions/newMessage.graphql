@@ -1,5 +1,5 @@
-subscription NewMessage($loggedUser: Int!, $receiver: Int!) {
-  newMessage(loggedUser: $loggedUser, receiver: $receiver) {
+subscription NewMessage($loggedUserId: Int!, $receiverId: Int!) {
+  newMessage(loggedUserId: $loggedUserId, receiverId: $receiverId) {
     id
     text
     user {

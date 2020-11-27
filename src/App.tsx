@@ -15,7 +15,7 @@ function App() {
           <Route exact path="/login" component={Login} />
           <Route exact path="/register" component={Register} />
           <Route exact path="/home" component={Home} />
-          <Route exact path="/home/message/:id" component={InboxId} />
+          <Route exact path="/home/message/:userId/:id" component={InboxId} />
         </Switch>
       </BrowserRouter>
     </div>

@@ -26,6 +26,7 @@ export type QueryConversationArgs = {
   limit: Scalars['Int'];
   cursor?: Maybe<Scalars['String']>;
   receiverId: Scalars['Int'];
+  loggedUserId: Scalars['Int'];
 };
 
 export type Me = {
@@ -136,6 +137,12 @@ export type Subscription = {
   newMessage: Message;
 };
 
+
+export type SubscriptionNewMessageArgs = {
+  receiverId: Scalars['Int'];
+  loggedUserId: Scalars['Int'];
+};
+
 export type LoginMutationVariables = Exact<{
   usernameOrEmail: Scalars['String'];
   password: Scalars['String'];
@@ -197,6 +204,7 @@ export type RegisterMutation = (
 );
 
 export type ConversationQueryVariables = Exact<{
+  loggedUserId: Scalars['Int'];
   limit: Scalars['Int'];
   receiverId: Scalars['Int'];
   cursor?: Maybe<Scalars['String']>;
@@ -255,7 +263,10 @@ export type LatestMessageSubscription = (
   ) }
 );
 
-export type NewMessageSubscriptionVariables = Exact<{ [key: string]: never; }>;
+export type NewMessageSubscriptionVariables = Exact<{
+  loggedUserId: Scalars['Int'];
+  receiverId: Scalars['Int'];
+}>;
 
 
 export type NewMessageSubscription = (
@@ -417,8 +428,13 @@ export type RegisterMutationHookResult = ReturnType<typeof useRegisterMutation>;
 export type RegisterMutationResult = Apollo.MutationResult<RegisterMutation>;
 export type RegisterMutationOptions = Apollo.BaseMutationOptions<RegisterMutation, RegisterMutationVariables>;
 export const ConversationDocument = gql`
-    query Conversation($limit: Int!, $receiverId: Int!, $cursor: String) {
-  conversation(limit: $limit, receiverId: $receiverId, cursor: $cursor) {
+    query Conversation($loggedUserId: Int!, $limit: Int!, $receiverId: Int!, $cursor: String) {
+  conversation(
+    loggedUserId: $loggedUserId
+    limit: $limit
+    receiverId: $receiverId
+    cursor: $cursor
+  ) {
     id
     text
     user {
@@ -446,6 +462,7 @@ export const ConversationDocument = gql`
  * @example
  * const { data, loading, error } = useConversationQuery({
  *   variables: {
+ *      loggedUserId: // value for 'loggedUserId'
  *      limit: // value for 'limit'
  *      receiverId: // value for 'receiverId'
  *      cursor: // value for 'cursor'
@@ -563,8 +580,8 @@ export function useLatestMessageSubscription(baseOptions?: Apollo.SubscriptionHo
 export type LatestMessageSubscriptionHookResult = ReturnType<typeof useLatestMessageSubscription>;
 export type LatestMessageSubscriptionResult = Apollo.SubscriptionResult<LatestMessageSubscription>;
 export const NewMessageDocument = gql`
-    subscription NewMessage {
-  newMessage {
+    subscription NewMessage($loggedUserId: Int!, $receiverId: Int!) {
+  newMessage(loggedUserId: $loggedUserId, receiverId: $receiverId) {
     id
     text
     user {
@@ -592,6 +609,8 @@ export const NewMessageDocument = gql`
  * @example
  * const { data, loading, error } = useNewMessageSubscription({
  *   variables: {
+ *      loggedUserId: // value for 'loggedUserId'
+ *      receiverId: // value for 'receiverId'
  *   },
  * });
  */

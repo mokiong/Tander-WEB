@@ -24,28 +24,23 @@ const Login: React.FC<loginProps> = () => {
     skip: typeof window === "undefined",
   });
 
-  const {
-    data: newData,
-    loading: newLoad,
-    fetchMore,
-    variables,
-  } = useConversationQuery({
-    variables: {
-      receiverId: 10,
-      limit: 2,
-      cursor: null,
-    },
-    notifyOnNetworkStatusChange: true,
-  });
 
-  if (newData && !newLoad) {
-    console.log(newData.conversation);
-  }
+    const { data: newData, loading: newLoad } = useConversationQuery({
+      skip: !data,
+      variables: {
+        loggedUserId: data.me.id,
+        receiverId: 10,
+        limit: 2,
+        cursor: null,
+      },
+      notifyOnNetworkStatusChange: true,
+    });
+  
 
   // if already logged in
-  // if (data?.me?.username) {
-  //   history.push("/home");
-  // }
+  if (data?.me?.username) {
+    history.push("/home");
+  }
 
   return (
     <BackImage

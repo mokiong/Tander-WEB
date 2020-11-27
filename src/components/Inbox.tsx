@@ -20,11 +20,10 @@ export const Inbox: React.FC<InboxProps> = () => {
     notifyOnNetworkStatusChange: true,
   });
 
-  const {
-    data: lastMessageData,
-    loading: lastMessageLoading,
-  } = useLatestMessageSubscription();
-
+  // const {
+  //   data: lastMessageData,
+  //   loading: lastMessageLoading,
+  // } = useLatestMessageSubscription();
 
   // mount subscription data to state
   // update subsciption array
@@ -34,7 +33,6 @@ export const Inbox: React.FC<InboxProps> = () => {
   //     setNewMessagesArray([...newMessagesArray, newMessageData]);
   //   }
   // }, [newMessageLoading, newMessageData]);
-
   let body;
   if (!data && loading) {
     body = <div>loading...</div>;
@@ -56,7 +54,7 @@ export const Inbox: React.FC<InboxProps> = () => {
                 align="center"
                 direction="row"
                 onClick={() => {
-                  history.push(`/home/message/${match.id}`);
+                  history.push(`/home/message/${data.user.id}/${match.id}`);
                 }}
               >
                 <Image
